@@ -23,6 +23,7 @@ requires:
   Exporter: 5.63
   Sub::Override: 0.08
   Term::ANSIColor: 2.01
+  Test::Differences: 0.4801
 resources:
   license: http://dev.perl.org/licenses/
 version: 0.05
