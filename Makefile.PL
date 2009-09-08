@@ -7,6 +7,10 @@ license  'perl';
 
 build_requires 'Test::More';
 
+requires 'Sub::Override' => 0.08;
+requires 'Exporter' => 5.63;
+requires 'Term::ANSIColor' => 2.01;
+
 auto_install;
 
 WriteAll;

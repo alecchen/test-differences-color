@@ -1,52 +1,100 @@
 package Test::Differences::Color;
 
-use warnings;
-use strict;
+use Sub::Override;
+use Term::ANSIColor qw(:constants);
+#$Term::ANSIColor::AUTORESET = 1;
+
+use Exporter 'import';
+our @EXPORT = qw(eq_or_diff);
 
 =head1 NAME
 
-Test::Differences::Color - The great new Test::Differences::Color!
+Test::Differences::Color - colorize the result of Test::Differences
 
 =head1 VERSION
 
-Version 0.01
+Version 0.04
 
 =cut
 
-our $VERSION = '0.01';
-
+our $VERSION = '0.05';
 
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
-
-Perhaps a little code snippet.
-
+    use Test::More tests => 1;
     use Test::Differences::Color;
 
-    my $foo = Test::Differences::Color->new();
-    ...
+    eq_or_diff(\%hash1, \@hash2);
 
 =head1 EXPORT
 
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
+=head2 eq_or_diff
 
 =head1 FUNCTIONS
 
-=head2 function1
+=head2 eq_or_diff
+
+see L<Test::Differences>
 
 =cut
 
-sub function1 {
+sub eq_or_diff {
+    my ($data1, $data2) = @_;
+    my(undef, $file, $line_num) = caller;
+
+    my $override = Sub::Override->new();
+    $override->replace('Test::Builder::_print_to_fh', 
+        sub {
+            my( $self, $fh, @msgs ) = @_;
+
+            # Prevent printing headers when only compiling.  Mostly for when
+            # tests are deparsed with B::Deparse
+            return if $^C;
+
+            my $msg = join '', @msgs;
+
+            local( $\, $", $, ) = ( undef, ' ', '' );
+
+            # Escape each line after the first with a # so we don't
+            # confuse Test::Harness.
+            $msg =~ s{\n(?!\z)}{\n# }sg;
+
+            # Stick a newline on the end if it needs it.
+            $msg .= "\n" unless $msg =~ /\n\z/;
+
+            my @lines = split /\n/, $msg;
+
+            foreach my $line (@lines) {
+                my $match_start = $line =~ /^# \*/;
+                my $match_end   = $line =~ /\*$/;
+
+                if ($match_start && $match_end) {
+                    print $fh ON_RED, $line, RESET, "\n";
+                }
+                elsif ($match_start) {
+                    print $fh ON_BLUE, $line, RESET, "\n";
+                }
+                elsif ($match_end) {
+                    print $fh ON_GREEN, $line, RESET, "\n";
+                }
+                else {
+                    print $fh $line, "\n";
+                }
+            }
+
+            return;
+        },   
+    );
+
+    require Test::Differences;
+    my $return = Test::Differences::eq_or_diff($data1, $data2);
+    $override->restore();
+    return $return;
 }
 
-=head2 function2
+=head1 SEE ALSO
 
-=cut
-
-sub function2 {
-}
+L<Test::Differences>
 
 =head1 AUTHOR
 
@@ -54,19 +102,13 @@ Alec Chen, C<< <alec at cpan.org> >>
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-test-differences-color at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Test-Differences-Color>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
-
-
-
+Please report any bugs or feature requests to C<bug-test-differences-color at rt.cpan.org>, or through the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Test-Differences-Color>. I will be notified, and then you'll automatically be notified of progress on your bug as I make changes.
 
 =head1 SUPPORT
 
 You can find documentation for this module with the perldoc command.
 
     perldoc Test::Differences::Color
-
 
 You can also look for information at:
 
@@ -86,24 +128,16 @@ L<http://cpanratings.perl.org/d/Test-Differences-Color>
 
 =item * Search CPAN
 
-L<http://search.cpan.org/dist/Test-Differences-Color/>
+L<http://search.cpan.org/dist/Test-Differences-Color>
 
 =back
 
-
-=head1 ACKNOWLEDGEMENTS
-
-
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2009 Alec Chen.
+Copyright 2008 Alec Chen, all rights reserved.
 
 This program is free software; you can redistribute it and/or modify it
-under the terms of either: the GNU General Public License as published
-by the Free Software Foundation; or the Artistic License.
-
-See http://dev.perl.org/licenses/ for more information.
-
+under the same terms as Perl itself.
 
 =cut
 
