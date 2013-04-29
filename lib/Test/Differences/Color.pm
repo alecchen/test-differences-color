@@ -13,11 +13,11 @@ Test::Differences::Color - colorize the result of Test::Differences
 
 =head1 VERSION
 
-Version 0.04
+Version 0.06
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 =head1 SYNOPSIS
 
@@ -39,7 +39,7 @@ see L<Test::Differences>
 =cut
 
 sub eq_or_diff {
-    my ($data1, $data2) = @_;
+    my (@args) = @_;
     my(undef, $file, $line_num) = caller;
 
     my $override = Sub::Override->new();
@@ -87,7 +87,7 @@ sub eq_or_diff {
     );
 
     require Test::Differences;
-    my $return = Test::Differences::eq_or_diff($data1, $data2);
+    my $return = Test::Differences::eq_or_diff(@args);
     $override->restore();
     return $return;
 }

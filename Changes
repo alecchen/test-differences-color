@@ -1,5 +1,8 @@
 Revision history for Test-Differences-Color
 
+0.06    2013年04月49日 12時41分00秒
+        passing all arguments to Test::Differences
+
 0.05    2009年09月08日 21時44分21秒
         use Module::Install
 
